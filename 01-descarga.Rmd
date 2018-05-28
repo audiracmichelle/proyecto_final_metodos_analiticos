@@ -1,0 +1,222 @@
+# Descarga
+
+En esta sección mostramos la descarga de guiones de películas que viene clasificadas por género. La fuente es [http://www.imsdb.com/](http://www.imsdb.com/). 
+
+* Para la descarga usamos las siguientes paqueterías.
+
+```{r, warning=FALSE, message=FALSE}
+library(RCurl)
+library(gsubfn)
+library(tictoc)
+library(tidyverse)
+```
+
+## Listados de guiones por género de películas
+
+En [imsdb](http://www.imsdb.com/) se encuentran los guiones clasificados por su género. Usando `http://www.imsdb.com/feeds/genre.php?genre=GENERO` con GENERO como:
+
+* Action
+* Adventure
+* Animation
+* Comedy
+* Crime
+* Drama
+* Family
+* Fantasy
+* Film-Noir
+* Horror
+* Musical
+* Mystery
+* Romance
+* Sci-Fi
+* Short
+* Thriller
+* War
+* Western
+
+obtenemos el listado -por género de películas- de ligas para descargar los guiones.
+
+```{r}
+url_list <- list()
+
+u <- "http://www.imsdb.com/feeds/genre.php?genre=Action" 
+action <- strapplyc(getURL(u), "<link>(.*?)</link>", simplify = c)
+url_list[["action"]] <- action[-1]
+
+u <- "http://www.imsdb.com/feeds/genre.php?genre=Adventure" 
+adventure <- strapplyc(getURL(u), "<link>(.*?)</link>", simplify = c)
+url_list[["adventure"]] <- adventure[-1]
+
+u <- "http://www.imsdb.com/feeds/genre.php?genre=Animation" 
+animation <- strapplyc(getURL(u), "<link>(.*?)</link>", simplify = c)
+url_list[["animation"]] <- animation[-1]
+
+u <- "http://www.imsdb.com/feeds/genre.php?genre=Comedy" 
+comedy <- strapplyc(getURL(u), "<link>(.*?)</link>", simplify = c)
+url_list[["comedy"]] <- comedy[-1]
+
+u <- "http://www.imsdb.com/feeds/genre.php?genre=Crime" 
+crime <- strapplyc(getURL(u), "<link>(.*?)</link>", simplify = c)
+url_list[["crime"]] <- crime[-1]
+
+u <- "http://www.imsdb.com/feeds/genre.php?genre=Drama" 
+drama <- strapplyc(getURL(u), "<link>(.*?)</link>", simplify = c)
+url_list[["drama"]] <- drama[-1]
+
+u <- "http://www.imsdb.com/feeds/genre.php?genre=Family" 
+family <- strapplyc(getURL(u), "<link>(.*?)</link>", simplify = c)
+url_list[["family"]] <- family[-1]
+
+u <- "http://www.imsdb.com/feeds/genre.php?genre=Fantasy" 
+fantasy <- strapplyc(getURL(u), "<link>(.*?)</link>", simplify = c)
+url_list[["fantasy"]] <- fantasy[-1]
+
+u <- "http://www.imsdb.com/feeds/genre.php?genre=Film-Noir" 
+film_noir <- strapplyc(getURL(u), "<link>(.*?)</link>", simplify = c)
+url_list[["film_noir"]] <- film_noir[-1]
+
+u <- "http://www.imsdb.com/feeds/genre.php?genre=Horror" 
+horror <- strapplyc(getURL(u), "<link>(.*?)</link>", simplify = c)
+url_list[["horror"]] <- horror[-1]
+
+u <- "http://www.imsdb.com/feeds/genre.php?genre=Musical" 
+musical <- strapplyc(getURL(u), "<link>(.*?)</link>", simplify = c)
+url_list[["musical"]] <- musical[-1]
+
+u <- "http://www.imsdb.com/feeds/genre.php?genre=Mystery" 
+mystery <- strapplyc(getURL(u), "<link>(.*?)</link>", simplify = c)
+url_list[["mystery"]] <- mystery[-1]
+
+u <- "http://www.imsdb.com/feeds/genre.php?genre=Romance" 
+romance <- strapplyc(getURL(u), "<link>(.*?)</link>", simplify = c)
+url_list[["romance"]] <- romance[-1]
+
+u <- "http://www.imsdb.com/feeds/genre.php?genre=Sci-Fi" 
+scifi <- strapplyc(getURL(u), "<link>(.*?)</link>", simplify = c)
+url_list[["scifi"]] <- scifi[-1]
+
+u <- "http://www.imsdb.com/feeds/genre.php?genre=Short" 
+short <- strapplyc(getURL(u), "<link>(.*?)</link>", simplify = c)
+url_list[["short"]] <- short[-1]
+
+u <- "http://www.imsdb.com/feeds/genre.php?genre=Thriller" 
+thriller <- strapplyc(getURL(u), "<link>(.*?)</link>", simplify = c)
+url_list[["thriller"]] <- thriller[-1]
+
+u <- "http://www.imsdb.com/feeds/genre.php?genre=War" 
+war <- strapplyc(getURL(u), "<link>(.*?)</link>", simplify = c)
+url_list[["war"]] <- war[-1]
+
+u <- "http://www.imsdb.com/feeds/genre.php?genre=Western" 
+western <- strapplyc(getURL(u), "<link>(.*?)</link>", simplify = c)
+url_list[["western"]] <- western[-1]
+```
+
+* Vemos el número total de guiones.
+
+```{r}
+length(unique(unlist(url_list)))
+```
+
+* Vemos el número de guiones para cada género de películas. Algunos géneros tienen pocos guiones y hay intersecciones.
+
+```{r}
+lapply(url_list, length)
+```
+
+## Descarga de guiones: Creación de `scripts_all.RDS`
+
+* Hacemos la descarga de todos los guiones. Los guiones se encuentran en formato html. Por ejemplo:
+
+```{r}
+url <- "http://www.imsdb.com/scripts/Nightmare-Before-Christmas,-The.html"
+doc.raw <- getURL(url)
+write_lines(doc.raw, "./datos/Nightmare-Before-Christmas,-The.html")
+```
+
+```{bash}
+tail -n +300 ./datos/Nightmare-Before-Christmas,-The.html | head -n 20
+```
+
+* Por esto, al mismo tiempo que hacemos la descarga hacemos una limpieza inicial para extraer únicamente los diálogos y las descripciones de las escenas. 
+
+La función para hacer esto es:
+
+```{r}
+script_vec <- function(url) {
+  doc.raw <- getURL(url)
+  doc_vec <- strapplyc(doc.raw, "</b>(.*?)<b>", simplify = c)
+  doc_vec <- gsub("\n", "", doc_vec)
+  doc_vec <- gsub("\\s+", " ", doc_vec)
+  doc_vec
+}
+```
+
+* La descarga junto con la limpieza inicial de todos los scripts nos tomó 2 horas ejecutarla.
+
+```{r}
+#tic()
+
+if (!file.exists("./datos/scripts_all.RDS")) {
+  scripts <- list()
+  for(genre in names(url_list)) {
+    script_list <- lapply(url_list[[genre]], script_vec)
+    scripts[[genre]] <- Reduce("c", script_list)
+  }
+  write_rds(scripts, "./datos/scripts_all.RDS")
+}
+
+#toc()
+```
+
+* La salida la guardamos en `scripts_all.RDS` que contiene una lista con vectores de caracteres. Cada entrada de estos vectores es una línea de película o la descripción de una escena. Por ejemplo:
+
+```{r}
+script_vec(url)[300:310]
+```
+
+* Como los html's que ofrece [imsdb](http://www.imsdb.com/) no tienen un formato estandard puede ser que en ocasiones no logremos eliminar los nombres de los personajes que preceden a las líneas de los personajes en los dialogos de los guiones.
+
+## Descarga de guiones: Creación de `scripts_less.RDS`
+
+* Existen intersecciones de películas en los listados de guiones de películas. Por ejemplo
+
+```{r}
+intersect(url_list$musical, url_list$animation)
+```
+
+* Por esto, eliminamos manualmente algunos géneros o unimos su contenido
+
+```{r}
+url_list$film_noir <- NULL
+url_list$short <- NULL
+url_list$comedy <- url_list$comedy[!url_list$comedy %in% url_list$family]
+url_list$animation <- c(url_list$animation, url_list$family)
+url_list$animation <- c(url_list$animation, url_list$musical)
+url_list$family <- NULL
+url_list$musical <- NULL
+url_list$action <- c(url_list$action, url_list$western)
+url_list$western <- NULL
+#Filter(function(x) !x %in% c(url_list$adventure, url_list$action, url_list$drama), url_list$war)
+url_list$war <- NULL
+#Filter(function(x) !x %in% c(url_list$adventure, url_list$action, url_list$drama, url_list$crime, url_list$horror, url_list$mystery, url_list$scifi), url_list$thriller)
+url_list$thriller <- NULL
+```
+
+* Volvemos a correr la descarga y limpieza inicial. Con esto generamos `scripts_less.RDS`.
+
+```{r}
+# tic()
+# 
+# if (!file.exists("./datos/scripts_less.RDS")) {
+#   scripts <- list()
+#   for(genre in names(url_list)) {
+#     script_list <- lapply(url_list[[genre]], script_vec)
+#     scripts[[genre]] <- Reduce("c", script_list)
+#   }
+#   write_rds(scripts, "./datos/scripts_less.RDS")
+# }
+# 
+# toc()
+```
+

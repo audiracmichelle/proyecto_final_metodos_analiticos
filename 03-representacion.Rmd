@@ -1,0 +1,220 @@
+# Representaciones de palabras
+
+En esta sección vemos algunas diferencias en el uso de las palabras que escogimos de acuerdo al género de las películas.
+
+```{r, warning=FALSE, message=FALSE}
+if (!require(wordVectors)) {
+  if (!(require(devtools))) {
+    install.packages("devtools")
+  }
+  devtools::install_github("bmschmidt/wordVectors")
+}
+```
+
+* Cargamos los modelos entrenados:
+
+  + `model_all` con todos los géneros cinematográficos
+  + `model_less` con un los géneros cinematográficos simplificados
+
+```{r, include=FALSE}
+model_all = read.vectors("./datos/scripts_all.bin")
+model_less = read.vectors("./datos/scripts_less.bin")
+```
+
+## drink
+
+* drink_action
+
+Ahora se evalúa la palabra "drink", perteneciente al género de acción, con el modelo "model_less", para encontrar sus palabras más similiares. 
+
+Después de la misma palabra en otros géneros, se encuentra la palabra "cerveza", seguida de "brandy", "bebidas" en plural, "vodka", "whiskey", "vino" y "scotch". Estos resultados son reflejo de las bebidas a las que más se hace referencia en las películas de acción. 
+
+
+```{r}
+DT::datatable(model_less %>% closest_to("drink_action", n = 20))
+```
+
+* drink_animation
+
+Se evalúa la palabra "drink", perteneciente al género de animación, con el modelo "model_less", para encontrar sus palabras más similiares. 
+
+Los resultados muestran que, a diferencia del análisis de la misma palabra perteneciente al género de acción, las similitudes incluyen bebidas no alcohólicas, como el té, café, "refill" y taza.  
+
+```{r}
+DT::datatable(model_less %>% closest_to("drink_animation", n = 20))
+```
+
+## kiss
+
+* kiss_action
+
+Kiss en películas de acción es similar a abrazo y sonrisa. 
+
+```{r}
+DT::datatable(model_less %>% closest_to("kiss_action", n = 20))
+```
+
+* kiss_animation
+
+En las películas de animación kiss es similar a baile. 
+
+```{r}
+DT::datatable(model_less %>% closest_to("kiss_animation", n = 20))
+```
+
+## star
+
+* star_action
+
+La palabra star en las películas de acción se relaciona a naves espaciales, lasers y "ninja stars".
+
+```{r}
+DT::datatable(model_less %>% closest_to("star_action", n = 20))
+```
+
+* star_animation
+
+Se evalúa la palabra "star", pero ahora perteneciente al género de animación, con el modelo "model_less", para encontrar sus palabras más similiares.
+
+El resultado llama la atención, dado que dentro de las palabras similares, se encuentran varias que no se relacionan con el segmento infantil, audiencia que se pensaría son el mercado meta de la mayoría de las películas animadas...
+
+  + Leatherface es el nombre de un multihomicida del estado de Texas;
+  + Riefenstahl es el nombre de una actriz célebre por sus producciones propagandísticas del régimen de la Alemania nazi;
+  + y, un caso peculiar es el de la palabra "contini's". La película "El jardín de los Finzi-Contini" narra la historia de una familia judía, durante los tiempos de la Italia fascista, que invitaba a judíos a su jardín. La relación entre la palabra "star" y "contini's" se podría intuir como una relación entre la estrella de Abraham que portaban los judíos al entrar al jardín de la familia Contini. Este último caso, refleja el sesgo que puede crear una única película hacia una cierta definición de la palabra.  
+  + Por último, cabe mencionar la presencia de la palabra "spangled banner", el himno nacional de Estados Unidos dentro del género de animación. 
+
+```{r}
+DT::datatable(model_less %>% closest_to("star_animation", n = 20))
+```
+
+## kill
+
+* kill_action
+
+Se evalúa la palabra "kill", perteneciente al género de acción, con el modelo "model_less", para encontrar sus palabras más similiares. 
+
+```{r}
+DT::datatable(model_less %>% closest_to("kill_action", n = 20))
+```
+
+* kill_animation
+
+Se evalúa la palabra "kill", perteneciente al género de animación, con el modelo "model_less", para encontrar sus palabras más similiares. 
+
+```{r}
+DT::datatable(model_less %>% closest_to("kill_animation", n = 20))
+```
+
+La comparación entre los dos últimos resultados reflejan el distinto uso de la palabra "matar", dentro de los géneros de acción y animación. Bajo el género de acción, disparar y morir tienen una mayor similitud. Se puede creer, que cuando en las películas acción se menciona la palabra matar, realmente se asesina. Mientras que, en el género animado, cuando se menciona la palabra matar, se utiliza dentro de un contexto de diálogo, donde se busca comunicar una lección, ya que se utilizan palabras como culpa y "debiste haber escuchado". 
+
+## Comparación entre `model_all` y `model_less` 
+
+Se evalúa la palabra "kiss", perteneciente al género de acción, con el modelo "model_less", para encontrar sus palabras más similiares. 
+
+```{r}
+DT::datatable(model_less %>% closest_to("star_action", n = 30))
+```
+
+Se vuelve a evaluar la palabra "star", perteneciente al género de acción, pero ahora con el modelo "model_all", para encontrar sus palabras más similiares. 
+
+```{r}
+DT::datatable(model_all %>% closest_to("star_action", n = 30))
+```
+
+Se observa que las salidas de ambos modelos arrojan resultados semejantes. Se podría decir que la disminución de géneros, en la que se incurrió para entrenar el modelo "model_less", no representó un cambio en las palabras identificadas. 
+
+Al comparar las diferencias por género de las palabras similares a las que elegimos usando `model_all` y `model_less` llegamos a la conclusión que las simplificaciones a los géneros cinematográficos que hicimos -agregar listas de películas de géneros que se intersectaban o al eliminar las listas que tenían pocos elementos- impacta poco en los resultados.
+
+
+<!-- mas ideas -->
+
+<!-- Se evalúan las palabras "sexy" y "woman", con el modelo "model_less", para encontrar sus palabras más similiares.  -->
+
+<!-- Los resultados muestran características de mujeres a las que se les suele describir como "sexy". Atributos como juventud y color de cabello son algunos ejemplos.  -->
+
+<!-- ```{r} -->
+<!-- DT::datatable(model_less %>% closest_to(~"sexy"+"woman", n=20)) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- DT::datatable(model_less %>% closest_to(~"intelligent"+"woman", n=20)) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- library(ggrepel) -->
+<!-- vectores = model_less[[c("drink_action", -->
+<!--                     "drink_animation", -->
+<!--                     "drink_drama", -->
+<!--                     "drink_scifi", -->
+<!--                     "whisky", -->
+<!--                     "tea"), -->
+<!--                   average = F]] -->
+<!-- sims <- model_less[1:5000,] %>%  # las 5000 palabras más comunes -->
+<!--         cosineSimilarity(vectores) %>% -->
+<!--         as.data.frame() %>% -->
+<!--         rownames_to_column() %>% -->
+<!--         tibble::as_data_frame() -->
+<!-- similares <- sims %>% filter_at(vars(-rowname), any_vars(. > 0.6))   -->
+<!-- ggplot(similares, aes(x = tea, y = whisky, label = rowname)) + -->
+<!--   geom_text_repel() -->
+<!-- ``` -->
+
+
+
+<!-- ```{r} -->
+<!-- ingredients = c("drink_action", "drink_animation") -->
+<!-- term_set = lapply(ingredients,  -->
+<!--        function(ingredient) { -->
+<!--           nearest_words = model_less %>% closest_to(model_less[[ingredient]],20) -->
+<!--           nearest_words$word -->
+<!--         }) %>% unlist -->
+
+<!-- subset = model_less[[term_set,average=F]] -->
+
+<!-- subset %>% -->
+<!--   cosineDist(subset) %>%  -->
+<!--   as.dist %>% -->
+<!--   hclust %>% -->
+<!--   plot -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- model_less %>% closest_to(~"star_action" + "ninja", n=20) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- model_less %>% closest_to(~"star_animation" + "ninja", n=20) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- model_less %>% closest_to("girl_romance", n = 20) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- model_less %>% closest_to(~"girl_comedy"+"blonde", n=20) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- model_less %>% closest_to(~"courage"+"woman", n=20) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- model_less %>% closest_to("blonde_girl_scifi", n=20) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- model_less %>% closest_to(~"girl_romance"+"drink_romance", n=20) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- model_less %>% closest_to(model_less[[c("drink_action", "drink_animation")]], n=20) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- #gc() -->
+<!-- #set.seed(10) -->
+<!-- #centers = 50 -->
+<!-- #clustering = kmeans(model_less,centers=centers,iter.max = 40) -->
+<!-- ``` -->
+
+
